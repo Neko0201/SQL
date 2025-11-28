@@ -1,44 +1,44 @@
 package ru.netology.data;
-
 import lombok.SneakyThrows;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.SQLException;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
-import java.sql.Connection;
-import java.sql.SQLException;
-import static java.sql.DriverManager.getConnection;
 
 public class SQLHelper {
-    private static final QueryRunner QUERY_RUNNER = new QueryRunner();
+    private static QueryRunner QUERY_RUNNER = new QueryRunner();
 
     private SQLHelper() {
     }
 
+    //Подключение к БД
     private static Connection getConn() throws SQLException {
-        return getConnection(System.getProperty("db.url"), "app", "pass");
+        return DriverManager.getConnection(System.getProperty("db.url"), "app", "pass");
     }
 
+    //получить код верификации
     @SneakyThrows
     public static DataHelper.VerificationCode getVerificationCode() {
         var codeSQL = "SELECT code FROM auth_codes ORDER BY created DESC LIMIT 1";
-        try (var conn = getConn()) {
-            return QUERY_RUNNER.query(conn, codeSQL, new BeanHandler<>(DataHelper.VerificationCode.class));
-        }
+        var conn = getConn();
+        return QUERY_RUNNER.query(conn, codeSQL, new BeanHandler<>(DataHelper.VerificationCode.class));
     }
 
+    //Очищает БД
     @SneakyThrows
     public static void cleanDatabase() {
-        try (var conn = getConn()) {
-            QUERY_RUNNER.execute(conn, "DELETE FROM auth_codes");
-            QUERY_RUNNER.execute(conn, "DELETE FROM card_transactions");
-            QUERY_RUNNER.execute(conn, "DELETE FROM cards");
-            QUERY_RUNNER.execute(conn, "DELETE FROM users");
-        }
+        var connection = getConn();
+        QUERY_RUNNER.execute(connection, "DELETE FROM auth_codes");
+        QUERY_RUNNER.execute(connection, "DELETE FROM card_transactions");
+        QUERY_RUNNER.execute(connection, "DELETE FROM cards");
+        QUERY_RUNNER.execute(connection, "DELETE FROM users");
     }
 
+    //Очищает таблицу auth_codes
     @SneakyThrows
     public static void cleanAuthCodes() {
-        try (var conn = getConn()) {
-            QUERY_RUNNER.execute(conn, "DELETE FROM auth_codes");
-        }
+        var connection = getConn();
+        QUERY_RUNNER.execute(connection, "DELETE FROM auth_codes");
     }
 }
